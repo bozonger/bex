@@ -1,0 +1,57 @@
+<div class="dashboard-layout">
+  <aside class="sidebar surface">
+    <div class="sidebar-header">
+      <button class="btn btn-primary full-width" (click)="createNew()">
+        + Neuer Bericht
+      </button>
+    </div>
+    
+    <div class="report-list">
+      <h3>Deine Berichte</h3>
+      @for (report of userReports(); track report.id || report.fileName) {
+        <div class="report-item" (click)="loadSelectedReport(report.fileName)">
+          <div class="item-details">
+            <span class="kw-label">KW {{ parseFileName(report.fileName).kw }}</span>
+            <span class="year-label">{{ parseFileName(report.fileName).year }}</span>
+          </div>
+          <i class="arrow-icon">→</i>
+        </div>
+      } @empty {
+        <p class="empty-state">Noch keine Berichte vorhanden.</p>
+      }
+    </div>
+  </aside>
+
+  <main class="editor surface">
+    <header class="editor-header">
+      <h2>{{ isNewReport() ? 'Neuer Eintrag' : 'Bericht bearbeiten' }}</h2>
+      <div class="badge" [class.new]="isNewReport()">
+        {{ isNewReport() ? 'Entwurf' : 'Gespeichert' }}
+      </div>
+    </header>
+
+    <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Kalenderwoche</label>
+          <input type="text" class="input-base" formControlName="KalenderWoche" placeholder="z.B. 12">
+        </div>
+        <div class="form-group flex-1">
+          <label>Jahr</label>
+          <input type="text" class="input-base" formControlName="Jahr">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Berichtsinhalt</label>
+        <textarea class="input-base editor-area" formControlName="Bericht" placeholder="Schreibe hier deinen Bericht..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSubmitting() || reportForm.invalid">
+          {{ isSubmitting() ? 'Wird gespeichert...' : 'Speichern' }}
+        </button>
+      </div>
+    </form>
+  </main>
+</div>

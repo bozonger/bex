@@ -1,0 +1,58 @@
+<div class="auth-wrapper">
+  <div class="auth-card surface">
+    <header class="auth-header">
+      <h1>Account erstellen</h1>
+      <p class="subtitle">Starte jetzt mit deinem digitalen Berichtsheft</p>
+    </header>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+      
+      <div class="form-group">
+        <label for="username">Benutzername</label>
+        <input 
+          id="username"
+          type="text" 
+          class="input-base" 
+          formControlName="username" 
+          placeholder="Dein Name"
+        />
+        @if (registerForm.get('username')?.touched && registerForm.get('username')?.invalid) {
+          <span class="error-text">Min. 3 Zeichen erforderlich</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Passwort</label>
+        <input 
+          id="password"
+          type="password" 
+          class="input-base" 
+          formControlName="password" 
+          placeholder="••••••••"
+        />
+        @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
+          <span class="error-text">Min. 6 Zeichen erforderlich</span>
+        }
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn btn-primary auth-btn" 
+        [disabled]="registerForm.invalid || isLoading()"
+      >
+        {{ isLoading() ? 'Wird erstellt...' : 'Registrieren' }}
+      </button>
+
+      @if (errorMessage()) {
+        <div class="error-box">
+          {{ errorMessage() }}
+        </div>
+      }
+    </form>
+
+    <footer class="auth-footer">
+      <span>Bereits ein Mitglied?</span>
+      <a routerLink="/login">Hier anmelden</a>
+    </footer>
+  </div>
+</div>

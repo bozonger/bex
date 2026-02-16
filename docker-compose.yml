@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: ./bex-backend/bex-backend-api
+      dockerfile: Dockerfile
+    container_name: bex_api
+    ports:
+      - "9191:9191"
+    env_file:
+      - .env
+    volumes:
+      - ./bex-backend/database:/app/data
+      - ./bex-backend/uploads:/app/uploads
+    restart: always
+
+  frontend:
+    build:
+      context: ./bex-frontend
+      dockerfile: Dockerfile
+    container_name: bex_ui
+    ports:
+      - "4200:4200"
+    restart: always
+    depends_on:
+      - api
