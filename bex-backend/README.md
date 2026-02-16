@@ -1,4 +1,4 @@
-# Berichtsheft-Editor-X Backend
+# Berichtsheft-Editor-X Backend Teil
 
 ## Übersicht
 Dieses Backend wurde innerhalb eines **zweiwöchigen Sprints** als Prüfungssimulation für die IHK entwickelt. Es stellt eine **REST-API** auf Basis von **C# (.NET)** bereit, um digitale Berichtshefte zu verwalten.
@@ -16,3 +16,5 @@ Dieses Backend wurde innerhalb eines **zweiwöchigen Sprints** als Prüfungssimu
 2. **Start:** Projekt ausführen und `localhost:9191/swagger` aufrufen.
 3. **Authentifizierung:** Account registrieren, einloggen und den Token im Swagger-Bereich "Authorize" hinterlegen.
 4. **Bedienung:** Berichte über `SaveFileSeparate` speichern und gezielt über Jahr/KW in `getFile` wieder auslesen.
+
+# Berichtsheft-Editor-X Frontend Teil
