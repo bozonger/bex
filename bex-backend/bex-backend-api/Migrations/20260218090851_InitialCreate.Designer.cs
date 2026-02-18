@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Berichtsheft_Editor_X_API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250207091725_currentVersion")]
-    partial class currentVersion
+    [Migration("20260218090851_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

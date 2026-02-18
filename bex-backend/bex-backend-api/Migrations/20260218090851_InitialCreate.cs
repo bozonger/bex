@@ -5,7 +5,7 @@
 namespace Berichtsheft_Editor_X_API.Migrations
 {
     /// <inheritdoc />
-    public partial class currentVersion : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

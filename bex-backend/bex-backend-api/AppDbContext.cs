@@ -11,7 +11,6 @@ namespace Berichtsheft_Editor_X_API
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Define One-to-Many Relationship
             modelBuilder.Entity<Bericht>()
                 .HasOne(b => b.User)
                 .WithMany(u => u.Berichte)
