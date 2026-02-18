@@ -41,14 +41,12 @@ export class ReportComponent implements OnInit {
     this.isSubmitting.set(true);
     const info = this.parseFileName(fileName);
 
-    // Matching [FromForm] in C#
     const formData = new FormData();
     formData.append('calenderWeek', info.kw);
     formData.append('year', info.year);
 
     this.http.post(`${this.apiUrl}/getFile`, formData, { responseType: 'text' }).subscribe({
       next: (rawJson) => {
-        // Since C# returns fileContent as a string, we parse it here
         const data: Wochenbericht = JSON.parse(rawJson);
         
         this.reportForm.patchValue({
@@ -74,10 +72,8 @@ export class ReportComponent implements OnInit {
     if (this.reportForm.invalid) return;
     this.isSubmitting.set(true);
     
-    // getRawValue includes disabled fields (KW and Year)
     const payload = this.reportForm.getRawValue();
 
-    // Matching [FromBody] in C#
     this.http.post(`${this.apiUrl}/saveFile`, payload, { responseType: 'text' }).subscribe({
       next: () => {
         alert('Gespeichert!');
@@ -106,7 +102,6 @@ export class ReportComponent implements OnInit {
   }
 
   parseFileName(fileName: string) {
-    // Splits user_username_week_12_year_2025.json
     const parts = fileName.split('_');
     return { 
       kw: parts[3], 
