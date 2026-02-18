@@ -1,4 +1,4 @@
-using Berichtsheft_Editor_X_API;
+using bexbackend_API;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;

@@ -1,4 +1,4 @@
-﻿using Berichtsheft_Editor_X.Models;
+﻿using bexbackend.Models;
 
 using Microsoft.IdentityModel.Tokens;
 
@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Berichtsheft_Editor_X_API
+namespace bexbackend_API
 {
     public class AuthManager
     {

@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Berichtsheft_Editor_X_API.Migrations
+namespace bexbackend_API.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

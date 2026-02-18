@@ -1,7 +1,7 @@
-﻿using Berichtsheft_Editor_X.Models;
+﻿using bexbackend.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Berichtsheft_Editor_X_API
+namespace bexbackend_API
 {
     public class AppDbContext : DbContext
     {

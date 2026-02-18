@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Berichtsheft_Editor_X.Models
+namespace bexbackend.Models
 {
     public class Bericht
     {

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Berichtsheft_Editor_X_API.Models
+namespace bexbackend_API.Models
 {
     public class Wochenbericht
     {

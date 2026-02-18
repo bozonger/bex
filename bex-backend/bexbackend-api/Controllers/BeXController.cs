@@ -1,7 +1,7 @@
-﻿using Berichtsheft_Editor_X.Models;
+﻿using bexbackend.Models;
 
-using Berichtsheft_Editor_X_API;
-using Berichtsheft_Editor_X_API.Models;
+using bexbackend_API;
+using bexbackend_API.Models;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,7 +14,7 @@ using System.Text;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Berichtsheft_Editor_X.Controllers
+namespace bexbackend.Controllers
 {
     [Authorize]
     [Route("api/berichtsheft")]
@@ -37,27 +37,32 @@ namespace Berichtsheft_Editor_X.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public ActionResult<string> Login([FromForm] string username, [FromForm] string password)
+        public ActionResult<string> Login([FromBody] LoginRequest model)
         {
-            User? user = _DbContext.User.Where(x => x.Username == username).FirstOrDefault();
+            var user = _DbContext.User.FirstOrDefault(x => x.Username == model.Username);
+
+            // If user is null, we still "verify" a fake hash to prevent timing attacks
+            string hashToVerify = user?.Password ?? "placeholder_long_hash_string";
+            var verification = _Hasher.VerifyHashedPassword(model.Username, hashToVerify, model.Password);
 
             if (user == null)
             {
-                return Unauthorized("Wrong credentials");
+                return Unauthorized("Invalid credentials");
             }
 
-            var hashedPassword = user.Password;
-            var verification = _Hasher.VerifyHashedPassword(username, hashedPassword, password);
+            if (verification == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                user.Password = _Hasher.HashPassword(model.Username, model.Password);
+                _DbContext.SaveChanges();
+            }
 
-            if (verification == PasswordVerificationResult.Success || verification == PasswordVerificationResult.SuccessRehashNeeded)
+            if (verification != PasswordVerificationResult.Failed)
             {
                 var token = _AuthManager.GenerateToken(user);
-                return Ok(token);
+                return Ok(new { Token = token }); // Return as JSON object
             }
-            else
-            {
-                return Unauthorized("Wrong credentials");
-            }
+
+            return Unauthorized("Invalid credentials");
         }
 
         [Authorize(AuthenticationSchemes = "Bearer")]

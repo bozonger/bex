@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 
-namespace Berichtsheft_Editor_X_API
+namespace bexbackend_API
 {
     public class CustomSettings
     {

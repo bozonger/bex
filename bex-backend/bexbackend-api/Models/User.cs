@@ -1,4 +1,4 @@
-﻿namespace Berichtsheft_Editor_X.Models
+﻿namespace bexbackend.Models
 {
     public class User
     {

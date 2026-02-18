@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Berichtsheft_Editor_X_API</RootNamespace>
+    <RootNamespace>bexbackend_API</RootNamespace>
     <UserSecretsId>c553aee8-a7ce-4611-a48d-88d07d69e7b8</UserSecretsId>
   </PropertyGroup>
 
