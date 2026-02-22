@@ -26,7 +26,6 @@ export class RegisterComponent {
   isLoading = signal(false);
   errorMessage = signal('');
 
-  // Strongly typed, non-nullable form
   readonly registerForm = this.fb.nonNullable.group<{
     username: FormControl<string>;
     password: FormControl<string>;
@@ -55,7 +54,6 @@ export class RegisterComponent {
       error: (err: unknown) => {
         this.isLoading.set(false);
 
-        // Safely map backend error (string or object) -> UI message
         this.errorMessage.set(this.getErrorMessage(err));
       }
     });
@@ -63,18 +61,15 @@ export class RegisterComponent {
 
   private getErrorMessage(err: unknown): string {
     if (err instanceof HttpErrorResponse) {
-      // Your backend returns plain strings like "User already exists"
       if (typeof err.error === 'string' && err.error.trim().length > 0) {
         return err.error;
       }
 
-      // Sometimes error payload is JSON: { message: "..."}
       if (err.error && typeof err.error === 'object' && 'message' in err.error) {
         const msg = (err.error as { message?: unknown }).message;
         if (typeof msg === 'string' && msg.trim().length > 0) return msg;
       }
 
-      // Fallback to status text if available
       if (err.status === 0) return 'Keine Verbindung zum Server.';
       if (err.status === 409) return 'Benutzer existiert bereits.';
       if (err.status === 400) return 'Ungültige Eingaben.';

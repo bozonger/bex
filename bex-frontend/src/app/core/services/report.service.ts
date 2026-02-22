@@ -8,17 +8,14 @@ import { environment } from '../../../environments/environment.development';
 export class ReportService {
   private readonly http = inject(HttpClient);
 
-  // Prefer environment.ts in real apps
   private readonly API_URL = environment.apiUrl;
 
-  // Backend returns plain text: "File saved successfully."
   saveFile(report: Wochenbericht): Observable<string> {
     return this.http.post(`${this.API_URL}/saveFile`, report, {
       responseType: 'text'
     });
   }
 
-  // You said you fixed the typo -> now calendarWeek
   getFile(calendarWeek: string, year: string): Observable<ReportResponse> {
     const params = new HttpParams()
       .set('calendarWeek', calendarWeek)

@@ -20,7 +20,6 @@ export class ReportComponent implements OnInit {
   isSubmitting = signal(false);
   isNewReport = signal(true);
 
-  // Strongly typed, matches JSON: kalenderWoche/jahr/bericht
   readonly reportForm = this.fb.nonNullable.group<{
     kalenderWoche: FormControl<string>;
     jahr: FormControl<string>;
@@ -47,7 +46,6 @@ export class ReportComponent implements OnInit {
 
     const info = this.parseFileName(fileName);
 
-    // Backend: GET /getFile?calendarWeek=...&year=...
     this.reportService.getFile(info.kw, info.year).subscribe({
       next: (res) => {
         const data: Wochenbericht = res.content;
