@@ -1,18 +1,11 @@
 ﻿using bexbackend.Models;
-
-using bexbackend_API;
-using bexbackend_API.Models;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-
 using System.Security.Claims;
 using System.Text;
-
-using Microsoft.EntityFrameworkCore;
 
 namespace bexbackend.Controllers
 {
@@ -21,80 +14,81 @@ namespace bexbackend.Controllers
     [ApiController]
     public class BeXController : ControllerBase
     {
-        private AppDbContext _DbContext;
-        PasswordHasher<string> _Hasher = new();
-        private AuthManager _AuthManager;
-        public CustomSettings _CustomSettings;
-        private string _Env;
+        private readonly AppDbContext _DbContext;
+        private readonly PasswordHasher<string> _Hasher = new();
+        private readonly AuthManager _AuthManager;
+        private readonly IConfiguration _Config;
 
-        public BeXController(AppDbContext context, AuthManager authmanager, CustomSettings customSettings)
+        public BeXController(AppDbContext context, AuthManager authmanager, IConfiguration config)
         {
             _DbContext = context;
             _AuthManager = authmanager;
-            _CustomSettings = customSettings;
-            _Env = _CustomSettings.UploadFolderPath;
+            _Config = config;
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public ActionResult<string> Login([FromBody] LoginRequest model)
+        [Consumes("application/json")]
+        public ActionResult Login([FromBody] LoginRequest model)
         {
-            var user = _DbContext.User.FirstOrDefault(x => x.Username == model.Username);
-
-            // If user is null, we still "verify" a fake hash to prevent timing attacks
-            string hashToVerify = user?.Password ?? "placeholder_long_hash_string";
-            var verification = _Hasher.VerifyHashedPassword(model.Username, hashToVerify, model.Password);
-
-            if (user == null)
+            try
             {
-                return Unauthorized("Invalid credentials");
-            }
+                var user = _DbContext.User.FirstOrDefault(x => x.Username == model.Username);
 
-            if (verification == PasswordVerificationResult.SuccessRehashNeeded)
-            {
-                user.Password = _Hasher.HashPassword(model.Username, model.Password);
-                _DbContext.SaveChanges();
-            }
+                if (user == null)
+                {
+                    // User not found — return 401 immediately
+                    return Unauthorized("Invalid credentials");
+                }
 
-            if (verification != PasswordVerificationResult.Failed)
-            {
+                // Verify password
+                var verification = _Hasher.VerifyHashedPassword(model.Username, user.Password, model.Password);
+
+                if (verification == PasswordVerificationResult.Failed)
+                {
+                    return Unauthorized("Invalid credentials");
+                }
+
+                // Optional: rehash password if needed
+                if (verification == PasswordVerificationResult.SuccessRehashNeeded)
+                {
+                    user.Password = _Hasher.HashPassword(model.Username, model.Password);
+                    _DbContext.SaveChanges();
+                }
+
                 var token = _AuthManager.GenerateToken(user);
-                return Ok(new { Token = token }); // Return as JSON object
+                int.TryParse(_Config["JWT_EXPIRE_HOURS"], out int expireHours);
+
+                return Ok(new
+                {
+                    token = token,
+                    expiresIn = expireHours > 0 ? expireHours : 1
+                });
             }
-
-            return Unauthorized("Invalid credentials");
-        }
-
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        [HttpGet("test")]
-        public IActionResult Test()
-        {
-            if (User.Identity.IsAuthenticated)
+            catch (Exception ex)
             {
-                return Ok("Good");
+                Console.WriteLine(ex);
+                return StatusCode(500, "Server error");
             }
-
-            return Unauthorized("Ne");
         }
 
         [AllowAnonymous]
-        [Route("register")]
-        [HttpPost]
-        public IActionResult Register([FromForm] string password, [FromForm] string username)
+        [HttpPost("register")]
+        [Consumes("application/json")]
+        public IActionResult Register([FromBody] LoginRequest model)
         {
-            if (_DbContext.User.Any(x => x.Username == username))
-            {
+            if (model == null || string.IsNullOrEmpty(model.Username) || string.IsNullOrEmpty(model.Password))
+                return BadRequest("Username and password are required.");
+
+            if (_DbContext.User.Any(x => x.Username == model.Username))
                 return BadRequest("User already exists");
-            }
 
-            string hashedPassword = _Hasher.HashPassword(username, password);
-
-            User user = new User();
-
-            user.Password = hashedPassword;
-            user.Username = username;
-
-            user.Roles = "DefaultClaim";
+            var user = new User
+            {
+                Username = model.Username,
+                Password = _Hasher.HashPassword(model.Username, model.Password),
+                Roles = "DefaultClaim"
+            };
 
             _DbContext.User.Add(user);
             _DbContext.SaveChanges();
@@ -103,85 +97,85 @@ namespace bexbackend.Controllers
         }
 
         [Authorize(AuthenticationSchemes = "Bearer")]
-        [Route("saveFile")]
-        [HttpPost]
+        [HttpPost("saveFile")]
         public async Task<IActionResult> SaveFile([FromBody] Wochenbericht wochenBericht)
         {
-            if (wochenBericht == null) return BadRequest("No data received.");
+            if (wochenBericht == null)
+                return BadRequest("No data received.");
 
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var username = User.Identity?.Name;
 
-            if (userIdClaim == null || username == null)
-            {
+            if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(username))
                 return Unauthorized("User identity not found in token.");
-            }
 
-            int userId = int.Parse(userIdClaim);
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized("Invalid user id in token.");
 
-            string jsonToSave = JsonConvert.SerializeObject(wochenBericht);
-            byte[] fileBytes = Encoding.UTF8.GetBytes(jsonToSave);
-
-            string uploadsFolder = Path.Combine(_Env, "uploads");
+            string uploadsFolder = _Config["UPLOAD_FOLDER"] ?? "/app/uploads";
             Directory.CreateDirectory(uploadsFolder);
 
             string fileName = $"user_{username}_week_{wochenBericht.KalenderWoche}_year_{wochenBericht.Jahr}.json";
             string filePath = Path.Combine(uploadsFolder, fileName);
 
-            var existingBericht = _DbContext.Bericht
-                .FirstOrDefault(b => b.fileName == fileName && b.UserId == userId);
+            var existingBericht = await _DbContext.Bericht
+                .FirstOrDefaultAsync(b => b.fileName == fileName && b.UserId == userId);
 
             if (existingBericht == null)
             {
-                Bericht bericht = new Bericht()
+                _DbContext.Bericht.Add(new Bericht
                 {
                     fileName = fileName,
                     UserId = userId
-                };
-                _DbContext.Bericht.Add(bericht);
+                });
             }
 
             await _DbContext.SaveChangesAsync();
-            await System.IO.File.WriteAllBytesAsync(filePath, fileBytes);
+            var jsonBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(wochenBericht));
+            await System.IO.File.WriteAllBytesAsync(filePath, jsonBytes);
 
             return Ok("File saved successfully.");
         }
 
         [Authorize(AuthenticationSchemes = "Bearer")]
-        [Route("getFile")]
-        [HttpPost]
-        public async Task<IActionResult> GetFile([FromForm] string calenderWeek, [FromForm] string year)
+        [HttpGet("getFile")]
+        public async Task<IActionResult> GetFile([FromQuery] string calendarWeek, [FromQuery] string year)
         {
-            var userId = User.FindFirst(ClaimTypes.Name).Value;
-            if (userId == null)
-            {
-                return Unauthorized("No user found");
-            }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized("Invalid user id in token.");
 
-            var relatedUser = _DbContext.User.FirstOrDefault(x => x.Username == userId);
-
-            Bericht bericht = _DbContext.Bericht.FirstOrDefault(x => x.UserId == relatedUser.Id && x.fileName.Contains("week_" + calenderWeek + "_year_" + year));
+            var bericht = await _DbContext.Bericht
+                .FirstOrDefaultAsync(b => b.UserId == userId &&
+                                          b.fileName.Contains($"week_{calendarWeek}_year_{year}"));
 
             if (bericht == null)
+                return NotFound("No file found.");
+
+            string uploadsFolder = _Config["UPLOAD_FOLDER"] ?? "/app/uploads";
+            string filePath = Path.Combine(uploadsFolder, bericht.fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File missing on server.");
+
+            string json = await System.IO.File.ReadAllTextAsync(filePath);
+            var wochenbericht = JsonConvert.DeserializeObject<Wochenbericht>(json);
+
+            return Ok(new ReportResponse
             {
-                return BadRequest("No file found with the given name");
-            }
+                FileName = bericht.fileName,
+                Content = wochenbericht
+            });
 
-            string uploadsFolder = Path.Combine(_Env, "uploads");
-            string berichtLocation = Path.Combine(uploadsFolder, bericht.fileName);
-            string fileContent = await System.IO.File.ReadAllTextAsync(berichtLocation);
-
-            return Ok(fileContent);
         }
 
         [Authorize(AuthenticationSchemes = "Bearer")]
-        [HttpGet("getMyReports")]
-        public async Task<IActionResult> GetMyReports()
+        [HttpGet("getUserReports")]
+        public async Task<IActionResult> GetUserReports()
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null) return Unauthorized();
-
-            int userId = int.Parse(userIdClaim);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
 
             var reports = await _DbContext.Bericht
                 .Where(b => b.UserId == userId)

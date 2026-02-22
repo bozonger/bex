@@ -1,1 +1,23 @@
-<router-outlet></router-outlet>
+<header class="navbar surface">
+  <nav class="nav-container">
+    <a routerLink="/" class="logo">BEX Editor</a>
+
+    <div class="nav-links">
+      <a routerLink="/">Home</a>
+
+      @if (!isLoggedIn()) {
+        <a routerLink="/login">Login</a>
+        <a routerLink="/register">Register</a>
+      } @else {
+        <a routerLink="/report">Write Report</a>
+        <button type="button" class="btn btn-primary" (click)="logout()">
+          Logout
+        </button>
+      }
+    </div>
+  </nav>
+</header>
+
+<main class="main-content">
+  <router-outlet />
+</main>

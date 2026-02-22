@@ -1,30 +1,33 @@
-import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Wochenbericht, ReportResponse, UserReportItem } from '../interfaces/report.interfaces';
 import { environment } from '../../../environments/environment.development';
-import { Wochenbericht } from '../interfaces/auth.interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
+
+  // Prefer environment.ts in real apps
   private readonly API_URL = environment.apiUrl;
 
-  sendReportData(data: any) {
-    const formData = new FormData();
-    formData.append('KalendarWoche', data.KalendarWoche);
-    formData.append('Jahr', data.Jahr);
-    formData.append("Bericht", data.Bericht);
-
-    const headers = new HttpHeaders({
-      'accept': 'text/plain'
-    });
-
-    return this.http.post(this.API_URL + '/sendFile', formData, {
-      headers: headers,
+  // Backend returns plain text: "File saved successfully."
+  saveFile(report: Wochenbericht): Observable<string> {
+    return this.http.post(`${this.API_URL}/saveFile`, report, {
       responseType: 'text'
-    })
+    });
   }
 
-  getFile(fileName: string) {
-    return this.http.get<Wochenbericht>(`${this.API_URL}/getFile/${fileName}`);
+  // You said you fixed the typo -> now calendarWeek
+  getFile(calendarWeek: string, year: string): Observable<ReportResponse> {
+    const params = new HttpParams()
+      .set('calendarWeek', calendarWeek)
+      .set('year', year);
+
+    return this.http.get<ReportResponse>(`${this.API_URL}/getFile`, { params });
+  }
+
+  getUserReports(): Observable<UserReportItem[]> {
+    return this.http.get<UserReportItem[]>(`${this.API_URL}/getUserReports`);
   }
 }

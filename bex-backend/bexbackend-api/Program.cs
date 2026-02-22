@@ -1,4 +1,4 @@
-using bexbackend_API;
+using bexbackend;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -10,29 +10,29 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',') ?? new[] { "http://localhost:4200" };
+var jwtKey = builder.Configuration["JWT_KEY"]
+    ?? throw new Exception("JWT_KEY is not configured.");
+var jwtIssuer = builder.Configuration["JWT_ISSUER"] ?? "bexbackend";
+var jwtAudience = builder.Configuration["JWT_AUDIENCE"] ?? "bexfrontend";
 
-var apiKey = builder.Configuration["JWT_PRIVATE_KEY"] ?? "A_VERY_LONG_DEFAULT_UNSAFE_KEY_FOR_DEV_ONLY";
 
 builder.Services
-    .AddAuthentication(x =>
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(x =>
-    {
-        x.RequireHttpsMetadata = false;
-        x.SaveToken = true;
-        x.TokenValidationParameters = new TokenValidationParameters
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(apiKey)),
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateIssuerSigningKey = true
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddEndpointsApiExplorer();
@@ -43,11 +43,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        Description = "JWT Authorization header using the Bearer scheme.",
-        Flows = new OpenApiOAuthFlows()
-        {
-            Implicit = new OpenApiOAuthFlow() { }
-        }
+        Description = "JWT Authorization header using the Bearer scheme."
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -60,10 +56,17 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-builder.Services.AddSingleton<CustomSettings>();
 builder.Services.AddSingleton<AuthManager>();
+
+var connectionString = builder.Configuration["CONNECTION_STRING"]
+    ?? throw new Exception("Connection string missing.");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("SQLiteConnection")));
+    options.UseSqlite(connectionString));
+
+var allowedOrigins = builder.Configuration["ALLOWED_ORIGINS"]?
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", policy =>
@@ -103,7 +106,9 @@ app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment())
+var enableSwagger = builder.Configuration.GetValue<bool>("ENABLE_SWAGGER");
+
+if (enableSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI();

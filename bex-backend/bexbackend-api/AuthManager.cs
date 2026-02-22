@@ -1,55 +1,37 @@
-﻿using bexbackend.Models;
-
-using Microsoft.IdentityModel.Tokens;
-
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using bexbackend.Models;
 
-namespace bexbackend_API
+namespace bexbackend
 {
     public class AuthManager
     {
-        public CustomSettings _CustomSettings;
+        private readonly string _jwtKey;
+        private readonly int _expireHours;
 
-        public AuthManager(CustomSettings customSettings)
+        public AuthManager(IConfiguration config)
         {
-            _CustomSettings = customSettings;
-        }
-
-        public string GetPrivateKey()
-        {
-            string apiKey = Environment.GetEnvironmentVariable("JWT_PRIVATE_KEY");
-
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                if (!string.IsNullOrEmpty(_CustomSettings.PrivateKeyLocation) &&
-                    File.Exists(_CustomSettings.PrivateKeyLocation))
-                {
-                    apiKey = File.ReadAllText(_CustomSettings.PrivateKeyLocation);
-                }
-            }
-
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                return "A_VERY_LONG_DEFAULT_UNSAFE_KEY_FOR_DEV_ONLY";
-            }
-
-            return apiKey;
+            _jwtKey = config["JWT_KEY"] 
+                ?? throw new InvalidOperationException("JWT_KEY is not configured.");
+            
+            _expireHours = int.TryParse(config["JWT_EXPIRE_HOURS"], out var h) ? h : 1;
         }
 
         public string GenerateToken(User user)
         {
             var handler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(GetPrivateKey());
+            var keyBytes = Encoding.UTF8.GetBytes(_jwtKey);
+
             var credentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
+                new SymmetricSecurityKey(keyBytes),
                 SecurityAlgorithms.HmacSha256Signature);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = GenerateClaimsIdentity(user),
-                Expires = DateTime.UtcNow.AddDays(30),
+                Expires = DateTime.UtcNow.AddHours(_expireHours),
                 SigningCredentials = credentials,
             };
 
@@ -62,11 +44,9 @@ namespace bexbackend_API
             var claims = new ClaimsIdentity();
 
             claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-
             claims.AddClaim(new Claim(ClaimTypes.Name, user.Username));
 
-            var roles = user.Roles.Split(',');
-            foreach (var role in roles)
+            foreach (var role in user.Roles.Split(','))
                 claims.AddClaim(new Claim(ClaimTypes.Role, role));
 
             return claims;

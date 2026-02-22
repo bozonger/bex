@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace bexbackend_API.Migrations
+namespace bexbackend.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

@@ -1,30 +1,31 @@
-# STAGE 1: Build
+# ===== Build Angular =====
 FROM node:20 AS build
 WORKDIR /app
 
-# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy source and build the app
 COPY . .
 RUN npm run build --configuration=production
 
-# STAGE 2: Serve with Nginx
+
+# ===== Serve with Nginx =====
 FROM nginx:alpine
 
-# The critical path for Angular 17/18+ Application Builder:
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Add SPA config
+RUN printf "server {\n\
+  listen 80;\n\
+  root /usr/share/nginx/html;\n\
+  index index.html;\n\
+  location / {\n\
+    try_files \$uri \$uri/ /index.html;\n\
+  }\n\
+}\n" > /etc/nginx/conf.d/default.conf
+
 COPY --from=build /app/dist/bex-frontend/browser /usr/share/nginx/html
 
-# Custom Nginx config to handle Angular routing (SPAs)
-RUN echo 'server { \
-    listen 4200; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html index.htm; \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
-
-EXPOSE 4200
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

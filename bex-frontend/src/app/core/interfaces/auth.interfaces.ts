@@ -3,9 +3,7 @@ export interface LoginCredentials{
     password: string;
 }
 
-export interface Wochenbericht {
-  fileName?: string; 
-  KalenderWoche: string;
-  Jahr: string;
-  Bericht: string;
+export interface LoginResponse {
+  token: string;
+  expiresIn: number;
 }

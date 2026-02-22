@@ -1,5 +1,24 @@
-bin/
-obj/
-.git/
+# IDE and OS files
 .vs/
 .vscode/
+.git/
+.gitignore
+*.user
+*.suo
+*.sln.idsymb
+
+# Build outputs (The most important part)
+bin/
+obj/
+
+# Docker specific
+dockerfile
+docker-compose*
+.dockerignore
+
+# Published files
+publish/
+
+# Logs and temp files
+*.log
+TestResults/

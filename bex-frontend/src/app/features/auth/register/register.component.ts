@@ -1,14 +1,20 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+  FormControl
+} from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { LoginCredentials } from '../../../core/interfaces/auth.interfaces';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule, RouterLink],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
@@ -20,35 +26,61 @@ export class RegisterComponent {
   isLoading = signal(false);
   errorMessage = signal('');
 
-  registerForm = this.fb.nonNullable.group({
-    username: ['', [Validators.required, Validators.minLength(3)]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
+  // Strongly typed, non-nullable form
+  readonly registerForm = this.fb.nonNullable.group<{
+    username: FormControl<string>;
+    password: FormControl<string>;
+  }>({
+    username: this.fb.nonNullable.control('', {
+      validators: [Validators.required, Validators.minLength(3)]
+    }),
+    password: this.fb.nonNullable.control('', {
+      validators: [Validators.required, Validators.minLength(6)]
+    })
   });
 
-  onRegister() {
+  onRegister(): void {
     if (this.registerForm.invalid) return;
-    
+
     this.isLoading.set(true);
     this.errorMessage.set('');
-    
-    const { username, password } = this.registerForm.getRawValue();
 
-    // Create FormData to match the [FromForm] requirements on the backend
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('password', password);
+    const credentials: LoginCredentials = this.registerForm.getRawValue();
 
-    // Pass the formData object to your service
-    this.auth.register(formData).subscribe({
+    this.auth.register(credentials).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.router.navigate(['/login']);
       },
-      error: (err) => {
+      error: (err: unknown) => {
         this.isLoading.set(false);
-        // Display the specific "User already exists" message from your backend
-        this.errorMessage.set(err.error || 'Registrierung fehlgeschlagen.');
+
+        // Safely map backend error (string or object) -> UI message
+        this.errorMessage.set(this.getErrorMessage(err));
       }
     });
+  }
+
+  private getErrorMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      // Your backend returns plain strings like "User already exists"
+      if (typeof err.error === 'string' && err.error.trim().length > 0) {
+        return err.error;
+      }
+
+      // Sometimes error payload is JSON: { message: "..."}
+      if (err.error && typeof err.error === 'object' && 'message' in err.error) {
+        const msg = (err.error as { message?: unknown }).message;
+        if (typeof msg === 'string' && msg.trim().length > 0) return msg;
+      }
+
+      // Fallback to status text if available
+      if (err.status === 0) return 'Keine Verbindung zum Server.';
+      if (err.status === 409) return 'Benutzer existiert bereits.';
+      if (err.status === 400) return 'Ungültige Eingaben.';
+      return err.message || 'Registrierung fehlgeschlagen.';
+    }
+
+    return 'Registrierung fehlgeschlagen.';
   }
 }

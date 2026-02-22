@@ -1,46 +1,46 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
+import { Component, inject } from '@angular/core';
+import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { LoginCredentials } from '../../../core/interfaces/auth.interfaces';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RouterModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  private readonly fb = inject(FormBuilder);
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
 
-  isLoading = signal(false);
-  errorMessage = signal('');
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  loginForm = this.fb.nonNullable.group({
+  loading = false;
+  errorMessage = '';
+
+  loginForm = this.fb.group({
     username: ['', Validators.required],
     password: ['', Validators.required]
   });
 
   onSubmit() {
     if (this.loginForm.invalid) return;
-    
-    this.isLoading.set(true);
-    const { username, password } = this.loginForm.getRawValue();
 
-    this.auth.login(username, password).subscribe({
-      next: () => {
-        this.isLoading.set(false);
-        this.router.navigate(['/report']);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(err.status === 401 ? 'Login failed: Check credentials' : 'Connection error');
-      }
-    });
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.authService.login(this.loginForm.value as LoginCredentials)
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/report']);
+        },
+        error: err => {
+          this.errorMessage = err.error || 'Invalid credentials';
+          this.loading = false;
+        }
+      });
   }
 }

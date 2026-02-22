@@ -1,7 +1,7 @@
 ﻿using bexbackend.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace bexbackend_API
+namespace bexbackend
 {
     public class AppDbContext : DbContext
     {

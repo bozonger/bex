@@ -1,55 +1,95 @@
 <div class="dashboard-layout">
+  <!-- Sidebar -->
   <aside class="sidebar surface">
     <div class="sidebar-header">
-      <button class="btn btn-primary full-width" (click)="createNew()">
-        + Neuer Bericht
+      <button
+        type="button"
+        class="btn btn-primary full-width"
+        (click)="createNew()"
+      >
+        + New report
       </button>
     </div>
-    
+
     <div class="report-list">
-      <h3>Deine Berichte</h3>
-      @for (report of userReports(); track report.id || report.fileName) {
-        <div class="report-item" (click)="loadSelectedReport(report.fileName)">
+      <h3>Your reports</h3>
+
+      @for (report of userReports(); track trackByReport($index, report)) {
+        <button
+          type="button"
+          class="report-item"
+          (click)="loadSelectedReport(report.fileName)"
+        >
           <div class="item-details">
-            <span class="kw-label">KW {{ parseFileName(report.fileName).kw }}</span>
-            <span class="year-label">{{ parseFileName(report.fileName).year }}</span>
+            <span class="kw-label">
+              Week {{ parseFileName(report.fileName).kw }}
+            </span>
+            <span class="year-label">
+              {{ parseFileName(report.fileName).year }}
+            </span>
           </div>
-          <i class="arrow-icon">→</i>
-        </div>
-      } @empty {
-        <p class="empty-state">Noch keine Berichte vorhanden.</p>
+          <span class="arrow-icon">→</span>
+        </button>
+      }
+
+      @if (userReports().length === 0) {
+        <p class="empty-state">
+          No reports yet.
+        </p>
       }
     </div>
   </aside>
 
+  <!-- Editor -->
   <main class="editor surface">
     <header class="editor-header">
-      <h2>{{ isNewReport() ? 'Neuer Eintrag' : 'Bericht bearbeiten' }}</h2>
-      <div class="badge" [class.new]="isNewReport()">
-        {{ isNewReport() ? 'Entwurf' : 'Gespeichert' }}
-      </div>
+      <h2>
+        {{ isNewReport() ? 'New entry' : 'Edit report' }}
+      </h2>
+      <span class="badge" [class.new]="isNewReport()">
+        {{ isNewReport() ? 'Draft' : 'Saved' }}
+      </span>
     </header>
 
     <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
       <div class="form-row">
         <div class="form-group flex-1">
-          <label>Kalenderwoche</label>
-          <input type="text" class="input-base" formControlName="KalenderWoche" placeholder="z.B. 12">
+          <label for="kalenderWoche">Week</label>
+          <input
+            id="kalenderWoche"
+            type="text"
+            class="input-base"
+            formControlName="kalenderWoche"
+          />
         </div>
+
         <div class="form-group flex-1">
-          <label>Jahr</label>
-          <input type="text" class="input-base" formControlName="Jahr">
+          <label for="jahr">Year</label>
+          <input
+            id="jahr"
+            type="text"
+            class="input-base"
+            formControlName="jahr"
+          />
         </div>
       </div>
 
       <div class="form-group">
-        <label>Berichtsinhalt</label>
-        <textarea class="input-base editor-area" formControlName="Bericht" placeholder="Schreibe hier deinen Bericht..."></textarea>
+        <label for="bericht">Report content</label>
+        <textarea
+          id="bericht"
+          class="input-base editor-area"
+          formControlName="bericht"
+        ></textarea>
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="isSubmitting() || reportForm.invalid">
-          {{ isSubmitting() ? 'Wird gespeichert...' : 'Speichern' }}
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isSubmitting() || reportForm.invalid"
+        >
+          {{ isSubmitting() ? 'Saving...' : 'Save' }}
         </button>
       </div>
     </form>
