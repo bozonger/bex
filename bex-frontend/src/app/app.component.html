@@ -1,16 +1,17 @@
 <header class="navbar surface">
   <nav class="nav-container">
-    <a routerLink="/" class="logo">Berichtsheft Editor X</a>
+    <span class="logo">Berichtsheft Editor X</span>
 
     <div class="nav-links">
-      <a routerLink="/">Home</a>
-
       @if (!isLoggedIn()) {
         <a routerLink="/login">Login</a>
         <a routerLink="/register">Register</a>
       } @else {
         <a routerLink="/report">Write Report</a>
-        <button type="button" class="btn btn-primary" (click)="logout()">
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="logout()">
           Logout
         </button>
       }

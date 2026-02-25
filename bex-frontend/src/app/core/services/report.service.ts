@@ -27,4 +27,10 @@ export class ReportService {
   getUserReports(): Observable<UserReportItem[]> {
     return this.http.get<UserReportItem[]>(`${this.API_URL}/getUserReports`);
   }
+
+  deleteFile(calendarWeek: string, year: string) {
+    return this.http.delete<void>(`${this.API_URL}/deleteFile`, {
+      params: { calendarWeek, year }
+    });
+  }
 }

@@ -14,15 +14,15 @@
         <input id="password" type="password" formControlName="password" />
       </div>
 
-      @if (errorMessage) {
+      @if (errorMessage()) {
         <p class="auth-error">
-          {{ errorMessage }}
+          {{ errorMessage() }}
         </p>
       }
 
       <div class="auth-actions">
-        <button type="submit" class="btn" [disabled]="loading || loginForm.invalid">
-          {{ loading ? 'Signing in...' : 'Sign in' }}
+        <button type="submit" class="btn" [disabled]="loading() || loginForm.invalid">
+          {{ loading() ? 'Signing in...' : 'Sign in' }}
         </button>
       </div>
 

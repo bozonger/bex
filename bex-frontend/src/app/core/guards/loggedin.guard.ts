@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { map, take } from 'rxjs';
 
-export const authGuard: CanActivateFn = () => {
+export const loggedinGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -11,8 +11,8 @@ export const authGuard: CanActivateFn = () => {
     take(1),
     map(isLoggedIn =>
       isLoggedIn
-        ? true
-        : router.createUrlTree(['/login'])
+        ? router.createUrlTree(['/write-report'])
+        : true
     )
   );
 };

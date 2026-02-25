@@ -1,46 +1,70 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoginCredentials } from '../../../core/interfaces/auth.interfaces';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
-  private router = inject(Router);
+  loading = signal(false);
+  errorMessage = signal('');
 
-  loading = false;
-  errorMessage = '';
-
-  loginForm = this.fb.group({
-    username: ['', Validators.required],
-    password: ['', Validators.required]
+  readonly loginForm = this.fb.nonNullable.group({
+    username: this.fb.nonNullable.control('', { validators: [Validators.required] }),
+    password: this.fb.nonNullable.control('', { validators: [Validators.required] })
   });
 
-  onSubmit() {
+  onSubmit(): void {
     if (this.loginForm.invalid) return;
 
-    this.loading = true;
-    this.errorMessage = '';
+    this.loading.set(true);
+    this.errorMessage.set('');
 
-    this.authService.login(this.loginForm.value as LoginCredentials)
+    const credentials: LoginCredentials = this.loginForm.getRawValue();
+
+    this.authService
+      .login(credentials)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.loading.set(false);
           this.router.navigate(['/report']);
         },
-        error: err => {
-          this.errorMessage = err.error || 'Invalid credentials';
-          this.loading = false;
+        error: (err: unknown) => {
+          this.loading.set(false);
+          this.errorMessage.set(this.getErrorMessage(err));
         }
       });
+  }
+
+  private getErrorMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (typeof err.error === 'string' && err.error.trim().length > 0) {
+        return err.error;
+      }
+
+      if (err.error && typeof err.error === 'object' && 'message' in err.error) {
+        const msg = (err.error as { message?: unknown }).message;
+        if (typeof msg === 'string' && msg.trim().length > 0) return msg;
+      }
+
+      return 'Invalid credentials.';
+    }
+
+    return 'Invalid credentials.';
   }
 }
