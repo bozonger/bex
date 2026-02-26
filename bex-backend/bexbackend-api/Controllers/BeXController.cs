@@ -81,7 +81,7 @@ namespace bexbackend.Controllers
                 return BadRequest("Username and password are required.");
 
             if (_DbContext.User.Any(x => x.Username == model.Username))
-                return BadRequest("User already exists");
+                return Conflict("User already exists");
 
             var user = new User
             {
@@ -93,7 +93,7 @@ namespace bexbackend.Controllers
             _DbContext.User.Add(user);
             _DbContext.SaveChanges();
 
-            return Ok("Registered successfully");
+            return NoContent();
         }
 
         [Authorize(AuthenticationSchemes = "Bearer")]
@@ -187,6 +187,47 @@ namespace bexbackend.Controllers
                 .ToListAsync();
 
             return Ok(reports);
+        }
+
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        [HttpDelete("deleteFile")]
+        public async Task<IActionResult> DeleteFile([FromQuery] string calendarWeek, [FromQuery] string year)
+        {
+            if (string.IsNullOrWhiteSpace(calendarWeek) || string.IsNullOrWhiteSpace(year))
+                return BadRequest("calendarWeek and year are required.");
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized("Invalid user id in token.");
+
+            var bericht = await _DbContext.Bericht
+                .FirstOrDefaultAsync(b => b.UserId == userId &&
+                                          b.fileName.Contains($"week_{calendarWeek}_year_{year}"));
+
+            if (bericht == null)
+                return NotFound("No file found.");
+
+            string uploadsFolder = _Config["UPLOAD_FOLDER"] ?? "/app/uploads";
+            string filePath = Path.Combine(uploadsFolder, bericht.fileName);
+
+            _DbContext.Bericht.Remove(bericht);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                try
+                {
+                    System.IO.File.Delete(filePath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    return StatusCode(500, "Failed to delete file from disk.");
+                }
+            }
+
+            await _DbContext.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
