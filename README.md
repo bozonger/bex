@@ -12,9 +12,6 @@ Dieses Backend wurde innerhalb eines **zweiwöchigen Sprints** als Prüfungssimu
 > **Sicherheitshinweis:** Da das Projekt als zweiwöchige Simulation entwickelt wurde, liegt der Fokus auf der Funktionalität. Die Datenhaltung in der SQLite-Datenbank erfolgt unverschlüsselt und die Authentifizierung dient der Nutzertrennung; eine produktionsreife Verschlüsselung der Berichtsdateien war für dieses Projekt nie vorgesehen.
 
 ## Nutzung
-1. **Konfiguration:** UploadFolder-Pfad in der `appsettings.json` anpassen.
-2. **Start:** Projekt ausführen und `localhost:9191/swagger` aufrufen.
-3. **Authentifizierung:** Account registrieren, einloggen und den Token im Swagger-Bereich "Authorize" hinterlegen.
-4. **Bedienung:** Berichte über `SaveFileSeparate` speichern und gezielt über Jahr/KW in `getFile` wieder auslesen.
+Siehe `.env`-Beispieldatei.
 
 # Berichtsheft-Editor-X Frontend Teil
