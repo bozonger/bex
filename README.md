@@ -9,7 +9,7 @@ Dieses Backend wurde innerhalb eines **zweiwöchigen Sprints** als Prüfungssimu
 * **Datenhaltung:** SQLite Datenbank und Entity Framework.
 * **Dokumentation:** Interaktive API-Prüfung via Swagger.
 
-> **Sicherheitshinweis:** Da das Projekt als zweiwöchige Simulation entwickelt wurde, liegt der Fokus auf der Funktionalität. Die Datenhaltung in der SQLite-Datenbank erfolgt unverschlüsselt und die Authentifizierung dient der Nutzertrennung; eine produktionsreife Verschlüsselung der Berichtsdateien sowie ein erweitertes Password-Hashing-Verfahren waren für dieses Projekt nie vorgesehen.
+> **Sicherheitshinweis:** Da das Projekt als zweiwöchige Simulation entwickelt wurde, liegt der Fokus auf der Funktionalität. Die Datenhaltung in der SQLite-Datenbank erfolgt unverschlüsselt und die Authentifizierung dient der Nutzertrennung; eine produktionsreife Verschlüsselung der Berichtsdateien war für dieses Projekt nie vorgesehen.
 
 ## Nutzung
 1. **Konfiguration:** UploadFolder-Pfad in der `appsettings.json` anpassen.
