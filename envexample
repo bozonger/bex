@@ -1,0 +1,9 @@
+PORT=9191 (port API runs on)
+ALLOWED_ORIGINS=http://localhost:4200,http://bex_ui:80 (API requests allowed from these origins)
+UPLOAD_FOLDER=/app/uploads
+CONNECTION_STRING=Data Source=/app/data/bex_db.db
+JWT_KEY=super_secure_random_key_123456789
+JWT_ISSUER=bexbackend
+JWT_AUDIENCE=bexfrontend
+JWT_EXPIRE_HOURS=1
+ENABLE_SWAGGER=true
