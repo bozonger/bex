@@ -1,9 +1,10 @@
 # Berichtsheft-Editor-X Backend Teil
-
-## Übersicht
 Dieses Backend wurde innerhalb eines **zweiwöchigen Sprints** als Prüfungssimulation für die IHK entwickelt. Es stellt eine **REST-API** auf Basis von **C# (.NET)** bereit, um digitale Berichtshefte zu verwalten.
 
-## Features & Technik
+# Berichtsheft-Editor-X Frontend Teil
+Später auch in einem **zweiwöchigen Sprint** erstellt. Es stellt eine Angular Web App bereit um mit dem Backend kommunizieren zu können.
+
+# Features & Technik
 * **Struktur:** Saubere Trennung durch Controller-, Service- und Model-Layer.
 * **Authentifizierung:** JWT-basierter Login (User können nur eigene Daten abrufen).
 * **Datenhaltung:** SQLite Datenbank und Entity Framework.
@@ -13,5 +14,3 @@ Dieses Backend wurde innerhalb eines **zweiwöchigen Sprints** als Prüfungssimu
 
 ## Nutzung
 Siehe `.env`-Beispieldatei.
-
-# Berichtsheft-Editor-X Frontend Teil
