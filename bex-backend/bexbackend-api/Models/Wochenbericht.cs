@@ -1,0 +1,14 @@
+﻿using System.Text.Json.Serialization;
+
+namespace bexbackend.Models
+{
+    public class Wochenbericht
+    {
+        [JsonPropertyName("kalenderWoche")]
+        public string KalenderWoche { get; set; }
+        [JsonPropertyName("jahr")]
+        public string Jahr { get; set; }
+        [JsonPropertyName("bericht")]
+        public string Bericht { get; set; }
+    }
+}

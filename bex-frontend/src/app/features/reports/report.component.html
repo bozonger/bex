@@ -1,0 +1,133 @@
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar surface">
+    <div class="sidebar-header">
+      <button
+        type="button"
+        class="btn btn-primary full-width"
+        (click)="createNew()"
+      >
+        + New report
+      </button>
+    </div>
+
+    <div class="report-list">
+      <h3>Your reports</h3>
+
+      @for (report of userReports(); track trackByReport($index, report)) {
+        <button
+          type="button"
+          class="report-item"
+          (click)="loadSelectedReport(report.fileName)"
+        >
+          <div class="item-details">
+            <span class="kw-label">
+              Week {{ parseFileName(report.fileName).kw }}
+            </span>
+            <span class="year-label">
+              {{ parseFileName(report.fileName).year }}
+            </span>
+          </div>
+
+          <div class="item-actions">
+            <button
+              type="button"
+              class="icon-btn"
+              title="Delete"
+              (click)="deleteReport(report.fileName, $event)"
+              [disabled]="isSubmitting()"
+            >
+              🗑
+            </button>
+            <span class="arrow-icon">→</span>
+          </div>
+        </button>
+      }
+
+      @if (userReports().length === 0) {
+        <p class="empty-state">
+          No reports yet.
+        </p>
+      }
+    </div>
+  </aside>
+
+  <!-- Editor -->
+  <main class="editor surface">
+    <header class="editor-header">
+      <h2>
+        {{ isNewReport() ? 'New entry' : 'Edit report' }}
+      </h2>
+      <span class="badge" [class.new]="isNewReport()">
+        {{ isNewReport() ? 'Draft' : 'Saved' }}
+      </span>
+    </header>
+
+    <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="kalenderWoche">Week</label>
+          <input
+            id="kalenderWoche"
+            type="text"
+            inputmode="numeric"
+            class="input-base"
+            formControlName="kalenderWoche"
+          />
+
+          @if (reportForm.controls.kalenderWoche.touched && reportForm.controls.kalenderWoche.invalid) {
+            <small class="error">
+              @if (reportForm.controls.kalenderWoche.errors?.['required']) { Week is required. }
+              @if (reportForm.controls.kalenderWoche.errors?.['weekFormat']) { Week must be 1–2 digits. }
+              @if (reportForm.controls.kalenderWoche.errors?.['weekRange']) { Week must be between 1 and 53. }
+            </small>
+          }
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="jahr">Year</label>
+          <input
+            id="jahr"
+            type="text"
+            inputmode="numeric"
+            class="input-base"
+            formControlName="jahr"
+          />
+
+          @if (reportForm.controls.jahr.touched && reportForm.controls.jahr.invalid) {
+            <small class="error">
+              @if (reportForm.controls.jahr.errors?.['required']) { Year is required. }
+              @if (reportForm.controls.jahr.errors?.['yearFormat']) { Year must be 4 digits. }
+              @if (reportForm.controls.jahr.errors?.['yearRange']) { Year is out of allowed range. }
+            </small>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="bericht">Report content</label>
+        <textarea
+          id="bericht"
+          class="input-base editor-area"
+          formControlName="bericht"
+        ></textarea>
+
+        @if (reportForm.controls.bericht.touched && reportForm.controls.bericht.invalid) {
+          <small class="error">
+            @if (reportForm.controls.bericht.errors?.['required']) { Report content is required. }
+          </small>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isSubmitting() || reportForm.invalid"
+        >
+          {{ isSubmitting() ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </main>
+</div>

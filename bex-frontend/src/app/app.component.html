@@ -1,0 +1,24 @@
+<header class="navbar surface">
+  <nav class="nav-container">
+    <span class="logo">Berichtsheft Editor X</span>
+
+    <div class="nav-links">
+      @if (!isLoggedIn()) {
+        <a routerLink="/login">Login</a>
+        <a routerLink="/register">Register</a>
+      } @else {
+        <a routerLink="/report">Write Report</a>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="logout()">
+          Logout
+        </button>
+      }
+    </div>
+  </nav>
+</header>
+
+<main class="main-content">
+  <router-outlet />
+</main>

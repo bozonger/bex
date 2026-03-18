@@ -1,0 +1,122 @@
+/* ===== Design tokens ===== */
+:root {
+  --primary: #4f46e5;
+  --surface: #ffffff;
+  --bg: #f4f6fb;
+  --text: #1f2937;
+  --border: #e5e7eb;
+}
+
+/* ===== Reset / base ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== Shared components ===== */
+.btn {
+  border: none;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-base {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* ===== Unified auth layout ===== */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f6fa;
+}
+
+.auth-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.auth-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.auth-subtitle {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #666;
+}
+
+.auth-field {
+  margin-bottom: 1rem;
+}
+
+.auth-field label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.auth-field input {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.auth-error {
+  margin: 0.75rem 0;
+  color: #d32f2f;
+  font-size: 0.9rem;
+}
+
+.auth-actions {
+  margin-top: 1.25rem;
+}
+
+.auth-actions button {
+  width: 100%;
+}
+
+.auth-footer {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
